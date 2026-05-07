@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Akinator HTML</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #111111;
+            color: white;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .app {
+            width: 100%;
+            max-width: 540px;
+            background: #181818;
+            border-radius: 22px;
+            padding: 25px;
+            box-shadow: 0 0 35px rgba(0,0,0,0.6);
+            text-align: center;
+        }
+
+        h1 {
+            margin: 0 0 10px;
+            font-size: 30px;
+        }
+
+        #progress {
+            color: #aaaaaa;
+            margin-bottom: 25px;
+        }
+
+        #question {
+            font-size: 22px;
+            min-height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1.4;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            border: none;
+            border-radius: 12px;
+            padding: 14px 22px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            background: #ffffff;
+            color: #111111;
+        }
+
+        button:hover {
+            background: #dddddd;
+        }
+
+        #restart {
+            margin-top: 20px;
+            background: #333333;
+            color: white;
+        }
+
+        #resultBox {
+            display: none;
+            margin-top: 20px;
+            background: #222222;
+            border-radius: 14px;
+            padding: 15px;
+            text-align: left;
+            max-height: 340px;
+            overflow-y: auto;
+            line-height: 1.5;
+            font-size: 16px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .best {
+            text-align: center;
+            font-size: 23px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .score {
+            color: #bbbbbb;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .other {
+            border-top: 1px solid #444;
+            padding-top: 10px;
+        }
+
+        @media (max-width: 500px) {
+            body {
+                align-items: flex-start;
+                padding: 12px;
+            }
+
+            .app {
+                padding: 18px;
+            }
+
+            h1 {
+                font-size: 25px;
+            }
+
+            #question {
+                font-size: 19px;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            #resultBox {
+                max-height: 65vh;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app">
+    <h1>Akinator HTML</h1>
+
+    <div id="progress">Question 1</div>
+
+    <div id="question"></div>
+
+    <div id="resultBox"></div>
+
+    <div class="buttons" id="buttonBox">
+        <button onclick="answerQuestion(true)">Yes</button>
+        <button onclick="answerQuestion(false)">No</button>
+        <button onclick="dontKnow()">Don't know</button>
+    </div>
+
+    <button id="restart" onclick="restartGame()">Restart</button>
+</div>
+
+<script>
+let database = [
+
+    // MARVEL
+    {"name":"Iron Man","human":true,"male":true,"female":false,"hero":true,"villain":false,"movie":true,"series":false,"game":false,"anime":false,"marvel":true,"dc":false,"magic":false,"inventor":true,"scientist":true,"rich":true,"billionaire":true,"armor":true,"mask":true,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":false,"leader":true,"smart":true,"funny":true,"strong":false,"flying":true,"red":true,"blue":false,"green":false,"black":false,"gold":true,"american":true,"avenger":true,"uses_technology":true,"weapon":true},
+
+    {"name":"Captain America","human":true,"male":true,"female":false,"hero":true,"villain":false,"movie":true,"series":false,"game":false,"anime":false,"marvel":true,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":true,"leader":true,"smart":true,"funny":false,"strong":true,"flying":false,"red":true,"blue":true,"green":false,"black":false,"gold":false,"american":true,"avenger":true,"soldier":true,"shield":true},
+
+    {"name":"Thor","human":false,"male":true,"female":false,"hero":true,"villain":false,"movie":true,"series":false,"game":false,"anime":false,"marvel":true,"dc":false,"magic":true,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":true,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":true,"leader":true,"smart":false,"funny":true,"strong":true,"flying":true,"red":false,"blue":false,"green":false,"black":false,"gold":false,"american":false,"avenger":true,"hammer":true,"lightning":true},
+
+    {"name":"Hulk","human":false,"male":true,"female":false,"hero":true,"villain":false,"movie":true,"series":false,"game":false,"anime":false,"marvel":true,"dc":false,"magic":false,"inventor":false,"scientist":true,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":true,"leader":false,"smart":true,"funny":false,"strong":true,"flying":false,"red":false,"blue":false,"green":true,"black":false,"gold":false,"american":true,"avenger":true,"big":true,"rage":true},
+
+    {"name":"Spider-Man","human":true,"male":true,"female":false,"hero":true,"villain":false,"movie":true,"series":true,"game":true,"anime":false,"marvel":true,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":true,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":true,"leader":false,"smart":true,"funny":true,"strong":true,"flying":false,"red":true,"blue":true,"green":false,"black":false,"gold":false,"american":true,"avenger":true,"teenager":true,"web":true},
+
+    {"name":"Doctor Strange","human":true,"male":true,"female":false,"hero":true,"villain":false,"movie":true,"series":true,"game":false,"anime":false,"marvel":true,"dc":false,"magic":true,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":true,"leader":false,"smart":true,"funny":false,"strong":false,"flying":true,"red":true,"blue":false,"green":false,"black":false,"gold":false,"american":true,"avenger":true,"doctor":true,"cape":true},
+
+    {"name":"Black Panther","human":true,"male":true,"female":false,"hero":true,"villain":false,"movie":true,"series":false,"game":false,"anime":false,"marvel":true,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":true,"billionaire":false,"armor":true,"mask":true,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":true,"animal":true,"superpowers":true,"leader":true,"smart":true,"funny":false,"strong":true,"flying":false,"red":false,"blue":false,"green":false,"black":true,"gold":false,"american":false,"avenger":true,"king":true,"warrior":true},
+
+    {"name":"Thanos","human":false,"male":true,"female":false,"hero":false,"villain":true,"movie":true,"series":false,"game":false,"anime":false,"marvel":true,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":true,"mask":false,"alien":true,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":true,"leader":true,"smart":true,"funny":false,"strong":true,"flying":false,"red":false,"blue":false,"green":false,"black":false,"gold":true,"american":false,"avenger":false,"purple":true,"big":true},
+
+    {"name":"Loki","human":false,"male":true,"female":false,"hero":false,"villain":true,"movie":true,"series":true,"game":false,"anime":false,"marvel":true,"dc":false,"magic":true,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":true,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":true,"leader":false,"smart":true,"funny":true,"strong":false,"flying":false,"red":false,"blue":false,"green":true,"black":false,"gold":false,"american":false,"avenger":false,"trickster":true,"horns":true},
+
+    // DC
+    {"name":"Batman","human":true,"male":true,"female":false,"hero":true,"villain":false,"movie":true,"series":true,"game":true,"anime":false,"marvel":false,"dc":true,"magic":false,"inventor":true,"scientist":false,"rich":true,"billionaire":true,"armor":true,"mask":true,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":true,"superpowers":false,"leader":true,"smart":true,"funny":false,"strong":true,"flying":false,"red":false,"blue":false,"green":false,"black":true,"gold":false,"american":true,"detective":true,"cape":true,"dark":true},
+
+    {"name":"Superman","human":false,"male":true,"female":false,"hero":true,"villain":false,"movie":true,"series":true,"game":true,"anime":false,"marvel":false,"dc":true,"magic":false,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":true,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":true,"leader":true,"smart":true,"funny":false,"strong":true,"flying":true,"red":true,"blue":true,"green":false,"black":false,"gold":false,"american":true,"cape":true,"laser_eyes":true,"glasses":true},
+
+    {"name":"Flash","human":true,"male":true,"female":false,"hero":true,"villain":false,"movie":true,"series":true,"game":true,"anime":false,"marvel":false,"dc":true,"magic":false,"inventor":false,"scientist":true,"rich":false,"billionaire":false,"armor":true,"mask":true,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":true,"leader":false,"smart":true,"funny":true,"strong":false,"flying":false,"red":true,"blue":false,"green":false,"black":false,"gold":true,"american":true,"speed":true,"lightning":true,"time_travel":true},
+
+    {"name":"Wonder Woman","human":true,"male":false,"female":true,"hero":true,"villain":false,"movie":true,"series":false,"game":true,"anime":false,"marvel":false,"dc":true,"magic":true,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":true,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":true,"leader":true,"smart":true,"funny":false,"strong":true,"flying":false,"red":true,"blue":true,"green":false,"black":false,"gold":true,"american":false,"warrior":true,"princess":true,"lasso":true},
+
+    {"name":"Joker","human":true,"male":true,"female":false,"hero":false,"villain":true,"movie":true,"series":true,"game":true,"anime":false,"marvel":false,"dc":true,"magic":false,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":false,"leader":false,"smart":true,"funny":true,"strong":false,"flying":false,"red":false,"blue":false,"green":true,"black":false,"gold":false,"american":true,"clown":true,"crazy":true,"purple":true},
+
+    // ANIME
+    {"name":"Naruto Uzumaki","human":true,"male":true,"female":false,"hero":true,"villain":false,"movie":false,"series":true,"game":true,"anime":true,"marvel":false,"dc":false,"magic":true,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":true,"leader":true,"smart":false,"funny":true,"strong":true,"flying":false,"red":false,"blue":false,"green":false,"black":false,"gold":false,"american":false,"ninja":true,"orange":true,"blonde_hair":true},
+
+    {"name":"Goku","human":false,"male":true,"female":false,"hero":true,"villain":false,"movie":true,"series":true,"game":true,"anime":true,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":true,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":true,"leader":false,"smart":false,"funny":true,"strong":true,"flying":true,"red":false,"blue":true,"green":false,"black":false,"gold":false,"american":false,"fighter":true,"orange":true,"spiky_hair":true},
+
+    {"name":"Luffy","human":true,"male":true,"female":false,"hero":true,"villain":false,"movie":false,"series":true,"game":true,"anime":true,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":true,"leader":true,"smart":false,"funny":true,"strong":true,"flying":false,"red":true,"blue":true,"green":false,"black":false,"gold":false,"american":false,"pirate":true,"straw_hat":true,"stretchy":true},
+
+    {"name":"Saitama","human":true,"male":true,"female":false,"hero":true,"villain":false,"movie":false,"series":true,"game":false,"anime":true,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":true,"leader":false,"smart":false,"funny":true,"strong":true,"flying":false,"red":false,"blue":false,"green":false,"black":false,"gold":false,"american":false,"bald":true,"yellow":true,"cape":true},
+
+    {"name":"Gojo Satoru","human":true,"male":true,"female":false,"hero":true,"villain":false,"movie":false,"series":true,"game":true,"anime":true,"marvel":false,"dc":false,"magic":true,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":true,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":true,"leader":false,"smart":true,"funny":true,"strong":true,"flying":false,"red":false,"blue":true,"green":false,"black":true,"gold":false,"american":false,"teacher":true,"white_hair":true,"blindfold":true},
+
+    {"name":"Tanjiro","human":true,"male":true,"female":false,"hero":true,"villain":false,"movie":true,"series":true,"game":true,"anime":true,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":false,"leader":false,"smart":true,"funny":false,"strong":true,"flying":false,"red":false,"blue":false,"green":true,"black":true,"gold":false,"american":false,"swordsman":true,"demon_slayer":true,"scar":true},
+
+    {"name":"Nezuko","human":false,"male":false,"female":true,"hero":true,"villain":false,"movie":true,"series":true,"game":true,"anime":true,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":true,"leader":false,"smart":false,"funny":false,"strong":true,"flying":false,"red":false,"blue":false,"green":false,"black":true,"gold":false,"american":false,"demon":true,"pink":true,"bamboo":true},
+
+    // YOUTUBERS
+    {"name":"MrBeast","human":true,"male":true,"female":false,"hero":false,"villain":false,"movie":false,"series":false,"game":false,"anime":false,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":true,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":true,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":false,"leader":true,"smart":true,"funny":true,"strong":false,"flying":false,"red":false,"blue":false,"green":false,"black":false,"gold":false,"american":true,"real_person":true,"famous":true,"challenge_videos":true},
+
+    {"name":"PewDiePie","human":true,"male":true,"female":false,"hero":false,"villain":false,"movie":false,"series":false,"game":false,"anime":false,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":true,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":true,"gamer":true,"singer":false,"politician":false,"animal":false,"superpowers":false,"leader":false,"smart":true,"funny":true,"strong":false,"flying":false,"red":false,"blue":false,"green":false,"black":false,"gold":false,"american":false,"real_person":true,"famous":true,"swedish":true},
+
+    {"name":"Dream","human":true,"male":true,"female":false,"hero":false,"villain":false,"movie":false,"series":false,"game":false,"anime":false,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":true,"billionaire":false,"armor":false,"mask":true,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":true,"gamer":true,"singer":false,"politician":false,"animal":false,"superpowers":false,"leader":false,"smart":true,"funny":true,"strong":false,"flying":false,"red":false,"blue":false,"green":true,"black":false,"gold":false,"american":true,"real_person":true,"famous":true,"minecraft":true},
+
+    {"name":"Technoblade","human":true,"male":true,"female":false,"hero":true,"villain":false,"movie":false,"series":false,"game":false,"anime":false,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":true,"gamer":true,"singer":false,"politician":false,"animal":true,"superpowers":false,"leader":true,"smart":true,"funny":true,"strong":false,"flying":false,"red":true,"blue":false,"green":false,"black":false,"gold":true,"american":true,"real_person":true,"minecraft":true,"pig":true},
+
+    {"name":"TommyInnit","human":true,"male":true,"female":false,"hero":false,"villain":false,"movie":false,"series":false,"game":false,"anime":false,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":true,"gamer":true,"singer":false,"politician":false,"animal":false,"superpowers":false,"leader":false,"smart":false,"funny":true,"strong":false,"flying":false,"red":true,"blue":false,"green":false,"black":false,"gold":false,"american":false,"real_person":true,"minecraft":true,"british":true},
+
+    {"name":"DanTDM","human":true,"male":true,"female":false,"hero":false,"villain":false,"movie":false,"series":false,"game":false,"anime":false,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":true,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":true,"gamer":true,"singer":false,"politician":false,"animal":false,"superpowers":false,"leader":false,"smart":true,"funny":true,"strong":false,"flying":false,"red":false,"blue":true,"green":false,"black":false,"gold":false,"american":false,"real_person":true,"minecraft":true,"british":true},
+
+    {"name":"Markiplier","human":true,"male":true,"female":false,"hero":false,"villain":false,"movie":false,"series":false,"game":false,"anime":false,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":true,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":true,"gamer":true,"singer":false,"politician":false,"animal":false,"superpowers":false,"leader":false,"smart":true,"funny":true,"strong":false,"flying":false,"red":true,"blue":false,"green":false,"black":true,"gold":false,"american":true,"real_person":true,"horror":true,"famous":true},
+
+    {"name":"KSI","human":true,"male":true,"female":false,"hero":false,"villain":false,"movie":false,"series":false,"game":false,"anime":false,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":true,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":true,"gamer":false,"singer":true,"politician":false,"animal":false,"superpowers":false,"leader":false,"smart":false,"funny":true,"strong":true,"flying":false,"red":false,"blue":false,"green":false,"black":true,"gold":false,"american":false,"real_person":true,"boxer":true,"british":true},
+
+    // GAMES
+    {"name":"Steve","human":true,"male":true,"female":false,"hero":true,"villain":false,"movie":false,"series":false,"game":true,"anime":false,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":false,"leader":false,"smart":false,"funny":false,"strong":true,"flying":false,"red":false,"blue":true,"green":false,"black":false,"gold":false,"american":false,"minecraft":true,"blocky":true,"pixelated":true,"survival":true},
+
+    {"name":"Herobrine","human":false,"male":true,"female":false,"hero":false,"villain":true,"movie":false,"series":false,"game":true,"anime":false,"marvel":false,"dc":false,"magic":true,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":true,"leader":false,"smart":true,"funny":false,"strong":true,"flying":true,"red":false,"blue":true,"green":false,"black":false,"gold":false,"american":false,"minecraft":true,"blocky":true,"white_eyes":true,"scary":true},
+
+    {"name":"Mario","human":true,"male":true,"female":false,"hero":true,"villain":false,"movie":true,"series":true,"game":true,"anime":false,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":false,"leader":false,"smart":false,"funny":true,"strong":false,"flying":false,"red":true,"blue":true,"green":false,"black":false,"gold":false,"american":false,"plumber":true,"mustache":true,"nintendo":true},
+
+    {"name":"Luigi","human":true,"male":true,"female":false,"hero":true,"villain":false,"movie":true,"series":true,"game":true,"anime":false,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":false,"leader":false,"smart":false,"funny":true,"strong":false,"flying":false,"red":false,"blue":true,"green":true,"black":false,"gold":false,"american":false,"plumber":true,"mustache":true,"nintendo":true},
+
+    {"name":"Sonic","human":false,"male":true,"female":false,"hero":true,"villain":false,"movie":true,"series":true,"game":true,"anime":false,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":true,"superpowers":true,"leader":false,"smart":false,"funny":true,"strong":false,"flying":false,"red":false,"blue":true,"green":false,"black":false,"gold":false,"american":false,"speed":true,"hedgehog":true,"fast":true},
+
+    {"name":"Link","human":true,"male":true,"female":false,"hero":true,"villain":false,"movie":false,"series":false,"game":true,"anime":false,"marvel":false,"dc":false,"magic":true,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":false,"leader":false,"smart":true,"funny":false,"strong":true,"flying":false,"red":false,"blue":false,"green":true,"black":false,"gold":false,"american":false,"swordsman":true,"shield":true,"nintendo":true},
+
+    {"name":"Zelda","human":true,"male":false,"female":true,"hero":true,"villain":false,"movie":false,"series":false,"game":true,"anime":false,"marvel":false,"dc":false,"magic":true,"inventor":false,"scientist":false,"rich":true,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":true,"animal":false,"superpowers":true,"leader":true,"smart":true,"funny":false,"strong":false,"flying":false,"red":false,"blue":false,"green":false,"black":false,"gold":true,"american":false,"princess":true,"nintendo":true,"royal":true},
+
+    {"name":"Freddy Fazbear","human":false,"male":true,"female":false,"hero":false,"villain":true,"movie":true,"series":false,"game":true,"anime":false,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":true,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":true,"politician":false,"animal":true,"superpowers":false,"leader":true,"smart":false,"funny":false,"strong":true,"flying":false,"red":false,"blue":false,"green":false,"black":false,"gold":false,"american":false,"bear":true,"horror":true,"animatronic":true},
+
+    {"name":"Sans","human":false,"male":true,"female":false,"hero":false,"villain":false,"movie":false,"series":false,"game":true,"anime":false,"marvel":false,"dc":false,"magic":true,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":true,"leader":false,"smart":true,"funny":true,"strong":true,"flying":false,"red":false,"blue":true,"green":false,"black":false,"gold":false,"american":false,"skeleton":true,"lazy":true,"undertale":true},
+
+    {"name":"Bendy","human":false,"male":true,"female":false,"hero":false,"villain":true,"movie":false,"series":false,"game":true,"anime":false,"cartoon":true,"marvel":false,"dc":false,"magic":true,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":true,"leader":false,"smart":false,"funny":false,"strong":true,"flying":false,"red":false,"blue":false,"green":false,"black":true,"gold":false,"american":false,"horror":true,"ink":true,"demon":true},
+
+    // MOVIES & SERIES
+    {"name":"Harry Potter","human":true,"male":true,"female":false,"hero":true,"villain":false,"movie":true,"series":false,"game":true,"anime":false,"marvel":false,"dc":false,"magic":true,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":true,"leader":true,"smart":true,"funny":false,"strong":false,"flying":true,"red":false,"blue":false,"green":false,"black":true,"gold":false,"american":false,"wizard":true,"glasses":true,"scar":true},
+
+    {"name":"Hermione Granger","human":true,"male":false,"female":true,"hero":true,"villain":false,"movie":true,"series":false,"game":true,"anime":false,"marvel":false,"dc":false,"magic":true,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":true,"leader":false,"smart":true,"funny":false,"strong":false,"flying":false,"red":false,"blue":false,"green":false,"black":false,"gold":false,"american":false,"witch":true,"student":true,"brown_hair":true},
+
+    {"name":"Darth Vader","human":true,"male":true,"female":false,"hero":false,"villain":true,"movie":true,"series":true,"game":true,"anime":false,"marvel":false,"dc":false,"magic":true,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":true,"mask":true,"alien":false,"robot":true,"cyborg":true,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":true,"leader":true,"smart":true,"funny":false,"strong":true,"flying":false,"red":false,"blue":false,"green":false,"black":true,"gold":false,"american":false,"space":true,"lightsaber":true,"star_wars":true},
+
+    {"name":"Luke Skywalker","human":true,"male":true,"female":false,"hero":true,"villain":false,"movie":true,"series":true,"game":true,"anime":false,"marvel":false,"dc":false,"magic":true,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":true,"leader":true,"smart":true,"funny":false,"strong":true,"flying":false,"red":false,"blue":false,"green":false,"black":false,"gold":false,"american":false,"space":true,"lightsaber":true,"star_wars":true},
+
+    {"name":"Shrek","human":false,"male":true,"female":false,"hero":true,"villain":false,"movie":true,"series":false,"game":true,"anime":false,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":false,"leader":false,"smart":false,"funny":true,"strong":true,"flying":false,"red":false,"blue":false,"green":true,"black":false,"gold":false,"american":false,"ogre":true,"big":true,"swamp":true},
+
+    {"name":"Elsa","human":true,"male":false,"female":true,"hero":true,"villain":false,"movie":true,"series":false,"game":true,"anime":false,"marvel":false,"dc":false,"magic":true,"inventor":false,"scientist":false,"rich":true,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":true,"politician":true,"animal":false,"superpowers":true,"leader":true,"smart":true,"funny":false,"strong":false,"flying":false,"red":false,"blue":true,"green":false,"black":false,"gold":false,"american":false,"princess":true,"queen":true,"ice":true},
+
+    {"name":"Wednesday Addams","human":true,"male":false,"female":true,"hero":false,"villain":false,"movie":false,"series":true,"game":false,"anime":false,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":false,"leader":false,"smart":true,"funny":false,"strong":false,"flying":false,"red":false,"blue":false,"green":false,"black":true,"gold":false,"american":true,"dark":true,"school":true,"serious":true},
+
+    {"name":"Gi-Hun Lee","human":true,"male":true,"female":false,"hero":true,"villain":false,"movie":false,"series":true,"game":false,"anime":false,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":false,"leader":false,"smart":false,"funny":false,"strong":false,"flying":false,"red":false,"blue":false,"green":true,"black":false,"gold":false,"american":false,"korean":true,"squid_game":true,"player":true},
+
+    // REAL PEOPLE
+    {"name":"Cristiano Ronaldo","human":true,"male":true,"female":false,"hero":false,"villain":false,"movie":false,"series":false,"game":false,"anime":false,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":true,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":false,"leader":true,"smart":false,"funny":false,"strong":true,"flying":false,"red":false,"blue":false,"green":false,"black":false,"gold":false,"american":false,"real_person":true,"footballer":true,"sports":true,"portuguese":true},
+
+    {"name":"Lionel Messi","human":true,"male":true,"female":false,"hero":false,"villain":false,"movie":false,"series":false,"game":false,"anime":false,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":true,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":false,"leader":true,"smart":false,"funny":false,"strong":false,"flying":false,"red":false,"blue":true,"green":false,"black":false,"gold":false,"american":false,"real_person":true,"footballer":true,"sports":true,"argentinian":true},
+
+    {"name":"Neymar","human":true,"male":true,"female":false,"hero":false,"villain":false,"movie":false,"series":false,"game":false,"anime":false,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":true,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":false,"leader":false,"smart":false,"funny":true,"strong":false,"flying":false,"red":false,"blue":false,"green":true,"black":false,"gold":false,"american":false,"real_person":true,"footballer":true,"sports":true,"brazilian":true},
+
+    {"name":"Elon Musk","human":true,"male":true,"female":false,"hero":false,"villain":false,"movie":false,"series":false,"game":false,"anime":false,"marvel":false,"dc":false,"magic":false,"inventor":true,"scientist":false,"rich":true,"billionaire":true,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":false,"leader":true,"smart":true,"funny":false,"strong":false,"flying":false,"red":false,"blue":false,"green":false,"black":false,"gold":false,"american":true,"real_person":true,"businessman":true,"space":true},
+
+    {"name":"Taylor Swift","human":true,"male":false,"female":true,"hero":false,"villain":false,"movie":false,"series":false,"game":false,"anime":false,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":true,"billionaire":true,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":true,"politician":false,"animal":false,"superpowers":false,"leader":true,"smart":true,"funny":false,"strong":false,"flying":false,"red":true,"blue":false,"green":false,"black":false,"gold":true,"american":true,"real_person":true,"famous":true,"blonde_hair":true},
+
+    {"name":"Billie Eilish","human":true,"male":false,"female":true,"hero":false,"villain":false,"movie":false,"series":false,"game":false,"anime":false,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":true,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":true,"politician":false,"animal":false,"superpowers":false,"leader":false,"smart":true,"funny":false,"strong":false,"flying":false,"red":false,"blue":false,"green":true,"black":true,"gold":false,"american":true,"real_person":true,"famous":true,"music":true},
+
+    {"name":"Michael Jackson","human":true,"male":true,"female":false,"hero":false,"villain":false,"movie":false,"series":false,"game":false,"anime":false,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":true,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":true,"politician":false,"animal":false,"superpowers":false,"leader":true,"smart":true,"funny":false,"strong":false,"flying":false,"red":false,"blue":false,"green":false,"black":true,"gold":false,"american":true,"real_person":true,"dancer":true,"dead":true},
+
+    {"name":"Albert Einstein","human":true,"male":true,"female":false,"hero":false,"villain":false,"movie":false,"series":false,"game":false,"anime":false,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":true,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":false,"leader":false,"smart":true,"funny":false,"strong":false,"flying":false,"red":false,"blue":false,"green":false,"black":false,"gold":false,"american":false,"real_person":true,"mustache":true,"dead":true,"genius":true},
+
+    {"name":"Barack Obama","human":true,"male":true,"female":false,"hero":false,"villain":false,"movie":false,"series":false,"game":false,"anime":false,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":true,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":true,"animal":false,"superpowers":false,"leader":true,"smart":true,"funny":false,"strong":false,"flying":false,"red":false,"blue":true,"green":false,"black":false,"gold":false,"american":true,"real_person":true,"president":true,"famous":true},
+
+    {"name":"Donald Trump","human":true,"male":true,"female":false,"hero":false,"villain":false,"movie":false,"series":false,"game":false,"anime":false,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":true,"billionaire":true,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":true,"animal":false,"superpowers":false,"leader":true,"smart":false,"funny":false,"strong":false,"flying":false,"red":true,"blue":false,"green":false,"black":false,"gold":true,"american":true,"real_person":true,"president":true,"businessman":true},
+
+    // MEMES
+    {"name":"Skibidi Toilet","human":false,"male":true,"female":false,"hero":false,"villain":false,"movie":false,"series":true,"game":false,"anime":false,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":false,"leader":false,"smart":false,"funny":true,"strong":false,"flying":false,"red":false,"blue":false,"green":false,"black":false,"gold":false,"american":false,"meme":true,"toilet":true,"youtube":true,"brainrot":true},
+
+    {"name":"Gigachad","human":true,"male":true,"female":false,"hero":false,"villain":false,"movie":false,"series":false,"game":false,"anime":false,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":false,"leader":false,"smart":false,"funny":true,"strong":true,"flying":false,"red":false,"blue":false,"green":false,"black":true,"gold":false,"american":false,"meme":true,"sigma":true,"muscular":true,"famous":true},
+
+    {"name":"Among Us Crewmate","human":false,"male":false,"female":false,"hero":false,"villain":false,"movie":false,"series":false,"game":true,"anime":false,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":true,"mask":true,"alien":true,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":false,"superpowers":false,"leader":false,"smart":false,"funny":true,"strong":false,"flying":false,"red":true,"blue":true,"green":true,"black":true,"gold":false,"american":false,"meme":true,"space":true,"sus":true,"crewmate":true},
+
+    {"name":"Big Chungus","human":false,"male":true,"female":false,"hero":false,"villain":false,"movie":false,"series":false,"game":false,"anime":false,"cartoon":true,"marvel":false,"dc":false,"magic":false,"inventor":false,"scientist":false,"rich":false,"billionaire":false,"armor":false,"mask":false,"alien":false,"robot":false,"cyborg":false,"god":false,"youtuber":false,"gamer":false,"singer":false,"politician":false,"animal":true,"superpowers":false,"leader":false,"smart":false,"funny":true,"strong":false,"flying":false,"red":false,"blue":false,"green":false,"black":false,"gold":false,"american":false,"meme":true,"rabbit":true,"big":true,"cute":true}
+
+];
+
+const questions = [
+    ["Is your character a Human?", "human"],
+    ["Is your character Male?", "male"],
+    ["Is your character Female?", "female"],
+    ["Is your character a Hero?", "hero"],
+    ["Is your character a Villain?", "villain"],
+    ["Is your character from a Movie?", "movie"],
+    ["Is your character from a Series?", "series"],
+    ["Is your character from a Game?", "game"],
+    ["Is your character from an Anime?", "anime"],
+    ["Is your character from a Cartoon?", "cartoon"],
+    ["Is your character from Marvel?", "marvel"],
+    ["Is your character from DC?", "dc"],
+    ["Does your character use Magic?", "magic"],
+    ["Is your character an Inventor?", "inventor"],
+    ["Is your character a Scientist?", "scientist"],
+    ["Is your character Rich?", "rich"],
+    ["Is your character a Billionaire?", "billionaire"],
+    ["Does your character wear Armor?", "armor"],
+    ["Does your character wear a Mask?", "mask"],
+    ["Is your character an Alien?", "alien"],
+    ["Is your character a Robot?", "robot"],
+    ["Is your character a Cyborg?", "cyborg"],
+    ["Is your character a God?", "god"],
+    ["Is your character a YouTuber?", "youtuber"],
+    ["Is your character a Gamer?", "gamer"],
+    ["Is your character a Singer?", "singer"],
+    ["Is your character a Politician?", "politician"],
+    ["Is your character an Animal?", "animal"],
+    ["Does your character have Superpowers?", "superpowers"],
+    ["Is your character a Leader?", "leader"],
+    ["Is your character Smart?", "smart"],
+    ["Is your character Funny?", "funny"],
+    ["Is your character Strong?", "strong"],
+    ["Can your character Fly?", "flying"],
+    ["Is your character Red or wears Red?", "red"],
+    ["Is your character Blue or wears Blue?", "blue"],
+    ["Is your character Green or wears Green?", "green"],
+    ["Is your character Black or wears Black?", "black"],
+    ["Is your character Gold or wears Gold?", "gold"],
+    ["Is your character American?", "american"],
+    ["Is your character an Avenger?", "avenger"],
+    ["Is your character a Soldier?", "soldier"],
+    ["Does your character use a Shield?", "shield"],
+    ["Does your character use a Hammer?", "hammer"],
+    ["Does your character have Lightning powers?", "lightning"],
+    ["Is your character a King?", "king"],
+    ["Is your character a Warrior?", "warrior"],
+    ["Is your character a Ninja?", "ninja"],
+    ["Is your character a Pirate?", "pirate"],
+    ["Is your character a Teacher?", "teacher"],
+    ["Is your character a Swordsman?", "swordsman"],
+    ["Is your character a Real Person?", "real_person"],
+    ["Is your character related to Minecraft?", "minecraft"],
+    ["Is your character a Footballer?", "footballer"],
+    ["Is your character a Meme?", "meme"]
+];
+
+let scores = {};
+let currentQuestion = 0;
+let gameFinished = false;
+
+const questionEl = document.getElementById("question");
+const progressEl = document.getElementById("progress");
+const resultBox = document.getElementById("resultBox");
+
+function resetScores() {
+    scores = {};
+    for (let character of database) {
+        scores[character.name] = 0;
+    }
+}
+
+function updateQuestion() {
+    if (currentQuestion >= questions.length) {
+        showResult();
+        return;
+    }
+
+    questionEl.style.display = "flex";
+    resultBox.style.display = "none";
+
+    questionEl.textContent = questions[currentQuestion][0];
+    progressEl.textContent = `Question ${currentQuestion + 1} / ${questions.length}`;
+}
+
+function answerQuestion(userAnswer) {
+    if (gameFinished) return;
+
+    const prop = questions[currentQuestion][1];
+
+    for (let character of database) {
+        const realValue = character[prop] ?? false;
+
+        if (realValue === userAnswer) {
+            scores[character.name] += 2;
+        } else {
+            scores[character.name] -= 1;
+        }
+    }
+
+    currentQuestion++;
+
+    if (currentQuestion >= questions.length) {
+        showResult();
+    } else {
+        updateQuestion();
+    }
+}
+
+function dontKnow() {
+    if (gameFinished) return;
+
+    currentQuestion++;
+
+    if (currentQuestion >= questions.length) {
+        showResult();
+    } else {
+        updateQuestion();
+    }
+}
+
+function showResult() {
+    gameFinished = true;
+
+    const sortedScores = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+    const bestName = sortedScores[0][0];
+    const bestScore = sortedScores[0][1];
+
+    let html = `
+        <div class="best">I guess your character is:<br><br>${bestName}</div>
+        <div class="score">Score: ${bestScore}</div>
+        <div class="other"><b>Other possible characters:</b><br><br>
+    `;
+
+    for (let i = 1; i < Math.min(25, sortedScores.length); i++) {
+        html += `${sortedScores[i][0]} - Score: ${sortedScores[i][1]}<br>`;
+    }
+
+    html += `</div>`;
+
+    questionEl.style.display = "none";
+    resultBox.style.display = "block";
+    resultBox.innerHTML = html;
+
+    progressEl.textContent = "Finished!";
+}
+
+function restartGame() {
+    currentQuestion = 0;
+    gameFinished = false;
+    resetScores();
+    updateQuestion();
+}
+
+resetScores();
+updateQuestion();
+</script>
+
+</body>
+</html>
